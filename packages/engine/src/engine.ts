@@ -5,10 +5,19 @@ import { marked } from "marked";
 
 export const cache = new Map<string, string>();
 
-export function compileMarkdown(file: string, outDir: string) {
-  const raw = fs.readFileSync(file, "utf-8");
-  const { content, data } = matter(raw);
-  const html = `<!DOCTYPE html>
+// 主题引擎接口
+export interface ThemeEngine {
+  compileMarkdown(file: string, outDir: string): void;
+  fullBuild(contentDir: string, outDir: string): void;
+  getCache?(file: string): string | undefined;
+}
+
+// 默认的简单HTML主题引擎
+export class DefaultThemeEngine implements ThemeEngine {
+  compileMarkdown(file: string, outDir: string): void {
+    const raw = fs.readFileSync(file, "utf-8");
+    const { content, data } = matter(raw);
+    const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -47,25 +56,55 @@ export function compileMarkdown(file: string, outDir: string) {
 <body>
   <h1>${data.title || '无标题'}</h1>
   <div class="content">
-    ${marked(content)}
+    ${marked.parse(content, { async: false })}
   </div>
 </body>
 </html>`;
-  cache.set(file, html);
+    cache.set(file, html);
 
-  const outFile = path.join(outDir, path.basename(file).replace(".md", ".html"));
-  fs.writeFileSync(outFile, html, 'utf-8');
-  //console.log(`✨ [Engine] Updated: ${file}`);
+    const outFile = path.join(outDir, path.basename(file).replace(".md", ".html"));
+    fs.writeFileSync(outFile, html, 'utf-8');
+    console.log(`✨ [Engine] Updated: ${file}`);
+  }
+
+  fullBuild(contentDir: string, outDir: string): void {
+    console.log("🔨 [Engine] Full build...");
+    fs.rmSync(outDir, { recursive: true, force: true });
+    fs.mkdirSync(outDir, { recursive: true });
+
+    const files = fs.readdirSync(contentDir);
+    for (const file of files) {
+      if (!file.endsWith(".md")) continue;
+      this.compileMarkdown(path.join(contentDir, file), outDir);
+    }
+  }
+
+  getCache(file: string): string | undefined {
+    return cache.get(file);
+  }
+}
+
+// 全局主题引擎实例
+let currentThemeEngine: ThemeEngine = new DefaultThemeEngine();
+
+/**
+ * 设置主题引擎
+ */
+export function setThemeEngine(themeEngine: ThemeEngine) {
+  currentThemeEngine = themeEngine;
+}
+
+/**
+ * 获取当前主题引擎
+ */
+export function getThemeEngine(): ThemeEngine {
+  return currentThemeEngine;
+}
+
+export function compileMarkdown(file: string, outDir: string) {
+  return currentThemeEngine.compileMarkdown(file, outDir);
 }
 
 export function fullBuild(contentDir: string, outDir: string) {
-  console.log("🔨 [Engine] Full build...");
-  fs.rmSync(outDir, { recursive: true, force: true });
-  fs.mkdirSync(outDir, { recursive: true });
-
-  const files = fs.readdirSync(contentDir);
-  for (const file of files) {
-    if (!file.endsWith(".md")) continue;
-    compileMarkdown(path.join(contentDir, file), outDir);
-  }
+  return currentThemeEngine.fullBuild(contentDir, outDir);
 }
