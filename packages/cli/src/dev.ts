@@ -1,9 +1,9 @@
 import chokidar from "chokidar";
 import path from "path";
 import { compileMarkdown, fullBuild, setThemeEngine } from "@torika/engine/src/engine";
-import { defaultThemeEngine } from "@torika/default-theme-react";
 import { createServer } from "vite";
 import { fileURLToPath } from "url";
+import { defaultThemeEngine } from "@torika/renderer";
 
 
 const current_dir = path.dirname(fileURLToPath(import.meta.url));

@@ -3,9 +3,9 @@ import path from "path";
 import matter from "gray-matter";
 import { marked } from "marked";
 import React from "react";
-import { renderToHtml } from "./Renderer/renderer.js";
-import { Layout } from "./Layout/Layout.js";
-import { Post } from "./Layout/Post.js";
+import { renderToHtml } from "./renderer.js";
+import { Layout } from "@torika/default-theme-react";
+import { Post } from "@torika/default-theme-react";
 
 export interface ThemeConfig {
   siteName?: string;

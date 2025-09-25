@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@torika/engine": "workspace:*",
+    "@torika/renderer": "workspace:*",
     "@torika/default-theme-react": "workspace:*",
     "chokidar": "^3.5.3",
     "vite": "^4.0.0"
