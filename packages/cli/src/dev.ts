@@ -7,7 +7,7 @@ import { defaultThemeEngine } from "@torika/renderer";
 
 
 const current_dir = path.dirname(fileURLToPath(import.meta.url));
-const postsDir = path.resolve(current_dir, "../../demo/posts");
+const postsDir = path.resolve(current_dir, "../../demo/source/_posts");
 const outDir = path.resolve(current_dir, "../../demo/dist");
 
 async function startDev() {
