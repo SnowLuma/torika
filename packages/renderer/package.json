@@ -26,12 +26,14 @@
     "build": "tsc -b"
   },
   "devDependencies": {
+    "@torika/default-theme-react": "workspace:*",
+    "@torika/custom-theme-example": "workspace:*",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "@torika/default-theme-react": "workspace:*"
+    "@types/react-dom": "^19.1.9"
   },
   "dependencies": {
+    "@torika/engine": "workspace:^",
     "gray-matter": "^4.0.3",
     "marked": "^16.3.0",
     "react": "^19.1.1",

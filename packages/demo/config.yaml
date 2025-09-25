@@ -1,0 +1,5 @@
+theme: "custom-theme-example"
+siteName: "Minimal Demo"
+author: "Demo Author"
+lang: "zh-CN"
+description: "A minimal demo blog powered by Torika"

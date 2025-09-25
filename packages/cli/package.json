@@ -9,6 +9,7 @@
     "@torika/engine": "workspace:*",
     "@torika/renderer": "workspace:*",
     "@torika/default-theme-react": "workspace:*",
+        "@torika/custom-theme-example": "workspace:*",
     "chokidar": "^3.5.3",
     "vite": "^4.0.0"
   },

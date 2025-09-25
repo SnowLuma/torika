@@ -3,6 +3,7 @@ title: 欢迎使用 Torika 博客引擎
 date: 2023-09-25
 tags: [blog, torika, welcome]
 categories: [general]
+page: "IndexPage"
 ---
 
 # 欢迎使用 Torika 博客引擎
