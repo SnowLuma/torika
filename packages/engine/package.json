@@ -27,6 +27,7 @@
     "dev": "tsx src/engine.ts"
   },
   "dependencies": {
+    "marked": "^16.3.0",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
