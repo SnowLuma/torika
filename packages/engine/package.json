@@ -1,0 +1,35 @@
+{
+  "name": "@torika/engine",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/engine.js",
+  "types": "./dist/engine.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/engine.js",
+      "types": "./dist/engine.d.ts"
+    },
+    "./src/*": {
+      "import": "./src/*.ts",
+      "types": "./src/*.ts"
+    },
+    "./dist/*": {
+      "import": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx src/engine.ts"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2"
+  }
+}

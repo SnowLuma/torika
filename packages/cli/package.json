@@ -1,0 +1,16 @@
+{
+  "name": "@torika/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsx ./src/dev.ts"
+  },
+  "dependencies": {
+    "@torika/engine": "workspace:*",
+    "chokidar": "^3.5.3",
+    "vite": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2"
+  }
+}
