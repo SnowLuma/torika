@@ -1,4 +1,5 @@
 import React from 'react';
+import Header from './Header.js';
 
 export interface AboutPageProps {
   meta: {
@@ -13,49 +14,27 @@ export interface AboutPageProps {
 
 export function AboutPage({ meta, content, className = '' }: AboutPageProps) {
   const { title = '关于我们', showTeam = false, foundedYear } = meta;
-
   return (
     <div className={`about-page ${className}`.trim()}>
-      <header className="about-header">
-        <h1 className="about-title">{title}</h1>
-        {foundedYear && (
-          <p className="about-founded">成立于 {foundedYear} 年</p>
-        )}
+      <Header />
+      <header>
+        <h1 className="page-hero-title">{title}</h1>
+        {foundedYear && <p className="post-item-date">成立于 {foundedYear} 年</p>}
       </header>
-      
-      <main className="about-main">
-        <div 
-          className="about-content"
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-        
+
+      <main>
+        <div className="post-content" dangerouslySetInnerHTML={{ __html: content }} />
+
         {showTeam && (
-          <section className="about-team">
-            <h2>团队成员</h2>
-            <div className="team-grid">
-              <div className="team-member">
-                <h3>张三</h3>
-                <p>创始人 & CEO</p>
-                <p>负责产品战略和团队管理</p>
-              </div>
-              <div className="team-member">
-                <h3>李四</h3>
-                <p>技术总监</p>
-                <p>负责技术架构和开发</p>
-              </div>
-              <div className="team-member">
-                <h3>王五</h3>
-                <p>设计师</p>
-                <p>负责UI/UX设计</p>
-              </div>
+          <section className="team-grid">
+            {/* 示例占位：保留简单卡片布局 */}
+            <div className="team-member">
+              <h3>张三</h3>
+              <p>创始人</p>
             </div>
           </section>
         )}
       </main>
-      
-      <footer className="about-footer">
-        <p>感谢您对Torika的关注和支持！</p>
-      </footer>
     </div>
   );
 }

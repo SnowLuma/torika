@@ -1,24 +1,33 @@
 import React from 'react';
+import Header from './Header.js';
 
 export interface LayoutProps {
   title?: string | undefined;
+  description?: string | undefined;
   children: React.ReactNode;
   className?: string;
 }
 
-export function Layout({ title, children, className = '' }: LayoutProps) {
+export function Layout({ title, description, children, className = '' }: LayoutProps) {
   return (
     <div className={`layout ${className}`.trim()}>
+      <Header />
+
       {title && (
-        <header className="layout-header">
-          <h1>{title}</h1>
-        </header>
+        <div className="page-hero">
+          <h1 className="page-hero-title">{title}</h1>
+          {description && <p className="page-hero-desc">{description}</p>}
+        </div>
       )}
+
       <main className="layout-main">
-        {children}
+        <div className="content-inner">
+          {children}
+        </div>
       </main>
+
       <footer className="layout-footer">
-        <p>Powered by Torika & React</p>
+        <p>© {new Date().getFullYear()} Torika</p>
       </footer>
     </div>
   );

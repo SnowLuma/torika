@@ -1,45 +1,18 @@
 import React from 'react';
+import Header from './Header.js';
 
 export interface CustomPageProps {
     title?: string;
-    content: string;
-    meta?: Record<string, any>;
+    content?: string;
     className?: string;
-    layout?: 'default' | 'full-width' | 'sidebar';
 }
 
-export function CustomPage({
-    title,
-    content,
-    meta = {},
-    className = '',
-    layout = 'default'
-}: CustomPageProps) {
+export function CustomPage({ title, content = '', className = '' }: CustomPageProps) {
     return (
-        <div className={`custom-page custom-page--${layout} ${className}`.trim()}>
-            {title && (
-                <header className="custom-page-header">
-                    <h1 className="custom-page-title">{title}</h1>
-                    {meta.description && (
-                        <p className="custom-page-description">{meta.description}</p>
-                    )}
-                </header>
-            )}
-
-            <main className="custom-page-main">
-                <div
-                    className="custom-page-content"
-                    dangerouslySetInnerHTML={{ __html: content }}
-                />
-            </main>
-
-            {meta.showDate && meta.date && (
-                <footer className="custom-page-footer">
-                    <time className="custom-page-date">
-                        最后更新：{typeof meta.date === 'string' ? meta.date : meta.date.toISOString().split('T')[0]}
-                    </time>
-                </footer>
-            )}
+        <div className={`custom-page ${className}`.trim()}>
+            <Header />
+            {title && <h1 className="page-hero-title">{title}</h1>}
+            <div className="post-content" dangerouslySetInnerHTML={{ __html: content }} />
         </div>
     );
 }

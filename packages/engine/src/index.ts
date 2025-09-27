@@ -6,4 +6,7 @@ export * from './theme-manager.js';
 
 // 导出类型定义
 export * from './types/theme.js';
-export * from './types/renerer.js';
+export * from './types/renderer.js';
+
+// 导出渲染器工厂
+export * from './renderer-factory.js';

@@ -1,4 +1,5 @@
 import React from 'react';
+import Header from './Header.js';
 
 export interface PostMeta {
   title?: string;
@@ -19,15 +20,21 @@ export function Post({ meta, content, className = '' }: PostProps) {
 
   return (
     <article className={`post ${className}`.trim()}>
+      <Header />
       {title && (
-        <header className="post-header">
+        <header>
           <h1 className="post-title">{title}</h1>
+          {date && <time className="post-item-date">{typeof date === 'string' ? date : date.toISOString().split('T')[0]}</time>}
         </header>
       )}
-      <div 
-        className="post-content"
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+
+      <div className="post-content" dangerouslySetInnerHTML={{ __html: content }} />
+
+      {tags && tags.length > 0 && (
+        <footer className="post-item-tags">
+          {tags.map((t, i) => <span key={i} className="tag">{t}</span>)}
+        </footer>
+      )}
     </article>
   );
 }

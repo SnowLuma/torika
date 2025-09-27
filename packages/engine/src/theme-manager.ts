@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import type { ThemeConfig, PageData, PageType } from './types/theme.js';
-import type { ThemeRendererEngine } from './types/renerer.js';
+import type { ThemeConfig, PageData, PageType, ThemeExport } from './types/theme.js';
+import { getRenderEngine } from './engine.js';
 
 // 通用配置管理器
 export class ConfigManager {
@@ -102,7 +102,7 @@ export class ConfigManager {
 export class ThemeManager {
   private static instance: ThemeManager;
   private loadedThemes = new Map<string, any>();
-  private currentEngine: ThemeRendererEngine | null = null;
+  private currentEngine: ThemeExport | null = null;
   private configManager = ConfigManager.getInstance();
 
   static getInstance(): ThemeManager {
@@ -152,18 +152,17 @@ export class ThemeManager {
       };
 
       // 创建渲染引擎
-      const engine = await this.createEngine(themeExport.engine, mergedConfig, themeName);
-      if (!engine) {
-        console.error(`渲染引擎创建失败: ${themeExport.engine}`);
-        return false;
-      }
+      // const engine = await this.createEngine(themeExport.engine, mergedConfig, themeName);
+      // if (!engine) {
+      //   console.error(`渲染引擎创建失败: ${themeExport.engine}`);
+      //   return false;
+      // }
 
-      // 如果是React引擎，设置主题模块
-      if (themeExport.engine === 'react' && 'setThemeModule' in engine) {
-        (engine as any).setThemeModule(themeExport);
-      }
+      // 将主题设置到渲染引擎，由引擎负责选择并创建渲染器
+      const renderEngine = getRenderEngine();
+      await renderEngine.setTheme(themeExport);
 
-      this.currentEngine = engine;
+      this.currentEngine = themeExport;
       console.log(`✅ 主题初始化成功: ${themeName} (${themeExport.engine})`);
       
       return true;
@@ -188,9 +187,13 @@ export class ThemeManager {
     };
 
     try {
-      const rendererModule = await import('../../renderer/dist/index.js');
-      const ReactThemeEngine = rendererModule.ReactThemeEngine;
-      this.currentEngine = new ReactThemeEngine(defaultConfig) as unknown as ThemeRendererEngine;
+      // 尝试加载默认主题包
+      const themeModule = await import('@torika/default-theme-react');
+      const themeExport = themeModule.default || themeModule;
+      // 将主题设置到渲染引擎
+      const renderEngine = getRenderEngine();
+      await renderEngine.setTheme(themeExport);
+      this.currentEngine = themeExport;
       return true;
     } catch (error) {
       console.error('加载默认主题失败:', error);
@@ -209,7 +212,7 @@ export class ThemeManager {
       }
 
       // 查找主题路径
-      const themePath = this.resolveThemePath(themeName, basePath);
+      const themePath = ThemeManager.resolveThemePath(themeName, basePath);
       if (!themePath) {
         console.error(`找不到主题: ${themeName}`);
         return null;
@@ -218,6 +221,33 @@ export class ThemeManager {
       // 加载主题模块
       const themeModule = await import(themePath);
       const themeExport = themeModule.default || themeModule;
+
+      // 解析并规范化主题的静态资源目录（相对于主题包）
+      try {
+        // themePath 以 file:// 开头
+        const { fileURLToPath } = await import('url');
+        const themeFile = fileURLToPath(themePath);
+        const themeDir = path.dirname(themeFile);
+        if (themeExport.staticDir) {
+          // 如果是相对路径则解析为绝对路径
+          const candidate = path.resolve(themeDir, themeExport.staticDir as string);
+          const candidateFromPackageRoot = path.resolve(themeDir, '..', themeExport.staticDir as string);
+          if (fs.existsSync(candidate)) {
+            themeExport.staticDir = candidate;
+          } else if (fs.existsSync(candidateFromPackageRoot)) {
+            themeExport.staticDir = candidateFromPackageRoot;
+          } else {
+            // 若两者都不存在，仍设为首个候选（方便后续路径诊断），并在控制台发出警告
+            themeExport.staticDir = candidate;
+            console.warn(`⚠️ 主题静态资源目录未找到（尝试过 dist 与 包根路径）: ${candidate} / ${candidateFromPackageRoot}`);
+          }
+          // 也同步到 config 中，方便模板或其他逻辑使用
+          if (!themeExport.config) themeExport.config = {};
+          themeExport.config.staticDir = themeExport.staticDir;
+        }
+      } catch (err) {
+        // 如果解析失败则保持原样
+      }
 
       // 验证主题格式
       if (!this.validateThemeExport(themeExport)) {
@@ -238,7 +268,7 @@ export class ThemeManager {
   /**
    * 解析主题路径
    */
-  private resolveThemePath(themeName: string, basePath?: string): string | null {
+  private static resolveThemePath(themeName: string, basePath?: string): string | null {
     const possiblePaths = [
       // 相对于当前项目的主题路径
       basePath ? path.resolve(basePath, `themes/${themeName}`) : null,
@@ -252,21 +282,8 @@ export class ThemeManager {
 
     for (const themePath of possiblePaths) {
       const indexPath = path.join(themePath, 'index.js');
-      const themeFilePath = path.join(themePath, 'theme.js');
-      const distIndexPath = path.join(themePath, 'dist/index.js');
-      const distThemePath = path.join(themePath, 'dist/theme.js');
       const packagePath = path.join(themePath, 'package.json');
       
-      // 优先检查构建后的文件
-      if (fs.existsSync(distThemePath)) {
-        return this.pathToFileUrl(distThemePath);
-      }
-      if (fs.existsSync(distIndexPath)) {
-        return this.pathToFileUrl(distIndexPath);
-      }
-      if (fs.existsSync(themeFilePath)) {
-        return this.pathToFileUrl(themeFilePath);
-      }
       if (fs.existsSync(indexPath)) {
         return this.pathToFileUrl(indexPath);
       }
@@ -288,29 +305,16 @@ export class ThemeManager {
   /**
    * 转换文件路径为file:// URL
    */
-  private pathToFileUrl(filePath: string): string {
+  private static pathToFileUrl(filePath: string): string {
     return `file://${filePath.replace(/\\/g, '/')}`;
   }
 
   /**
-   * 创建渲染引擎
+   * 创建渲染引擎（已弃用）
+   * 已移除：渲染器现在由 RenderEngine 和 RendererFactory 管理，
+   * 不再保留该兼容方法。
    */
-  private async createEngine(engineType: string, config: ThemeConfig, themeName?: string): Promise<ThemeRendererEngine | null> {
-    try {
-      switch (engineType.toLowerCase()) {
-        case 'react':
-          const rendererModule = await import('../../renderer/dist/index.js');
-          const ReactThemeEngine = rendererModule.ReactThemeEngine;
-          return new ReactThemeEngine(config, themeName) as unknown as ThemeRendererEngine;
-        default:
-          console.error(`不支持的渲染引擎: ${engineType}`);
-          return null;
-      }
-    } catch (error) {
-      console.error(`创建渲染引擎失败: ${engineType}`, error);
-      return null;
-    }
-  }
+  // createEngine 已移除，保留注释说明以便回溯历史记录。
 
   /**
    * 验证主题导出格式
@@ -329,14 +333,14 @@ export class ThemeManager {
   /**
    * 获取当前渲染引擎
    */
-  getCurrentEngine(): ThemeRendererEngine | null {
+  getCurrentEngine(): ThemeExport | null {
     return this.currentEngine;
   }
 
   /**
-   * 设置当前渲染引擎
+   * 设置当前渲染引擎（主题导出）
    */
-  setCurrentEngine(engine: ThemeRendererEngine): void {
+  setCurrentEngine(engine: ThemeExport): void {
     this.currentEngine = engine;
   }
 

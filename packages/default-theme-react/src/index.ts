@@ -5,6 +5,7 @@ export { IndexPage, type IndexPageProps } from './Layout/IndexPage.js';
 export { ArchivePage, type ArchivePageProps } from './Layout/ArchivePage.js';
 export { CustomPage, type CustomPageProps } from './Layout/CustomPage.js';
 export { AboutPage, type AboutPageProps } from './Layout/AboutPage.js';
+export { default as Header } from './Layout/Header.js';
 
 // 导出主题配置
 export { themeExport as default, themeConfig, layouts, components } from './theme.js';
